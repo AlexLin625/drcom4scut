@@ -1,10 +1,10 @@
-use std::net::IpAddr;
-
 use crate::util::{ip_to_vec, put_mac};
 use bytes::{BufMut, BytesMut};
 use pnet::datalink::MacAddr;
 use std::cmp::min;
-
+use std::mem::size_of;
+use std::net::IpAddr;
+use std::ops::BitXor;
 pub enum HeaderType {
     MiscAlive,
     MiscResponseAlive,
@@ -61,12 +61,15 @@ impl MiscAlive {
 }
 
 fn append_cks32(v: &mut [u8]) -> u32 {
+    const TRUNK_SIZE: usize = size_of::<u32>();
     let len = (v[2] >> 2) as usize;
     v[28] = 126;
     let s = v[0..4 * len]
-        .array_chunks()
+        .as_chunks::<TRUNK_SIZE>()
+        .0
+        .iter()
         .map(|v| u32::from_le_bytes(*v))
-        .fold(0, |a, b| a ^ b);
+        .fold(0, BitXor::bitxor);
     let s = ((s.to_le() as u64) * 19680126) as u32;
     v[24..28].copy_from_slice(&s.to_le_bytes());
     v[28] = 0;
@@ -173,10 +176,14 @@ impl MiscHeartbeat1 {
 }
 
 fn append_cks16(v: &mut [u8]) -> u32 {
+    const TRUNK_SIZE: usize = size_of::<u16>();
+
     let s = v[0..40]
-        .array_chunks()
+        .as_chunks::<TRUNK_SIZE>()
+        .0
+        .iter()
         .map(|x| u16::from_le_bytes(*x))
-        .fold(0, |a, b| a ^ b) as u32;
+        .fold(0, BitXor::bitxor) as u32;
     let s = s.to_le() * 711;
     v[24..28].copy_from_slice(&s.to_le_bytes());
     s

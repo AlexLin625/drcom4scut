@@ -1,4 +1,4 @@
-#![feature(ip, array_chunks)]
+#![feature(ip)]
 mod device;
 mod eap;
 mod logger;
@@ -7,11 +7,10 @@ mod socket;
 mod udp;
 mod util;
 
+use log::{error, info};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-
-use log::{error, info};
 
 use crate::settings::Settings;
 use crate::socket::Socket;
