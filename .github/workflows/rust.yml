@@ -1,5 +1,5 @@
 name: Rust
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 env:
   CARGO_TERM_COLOR: always
   NPCAP_SDK_URL: "https://npcap.com/dist/npcap-sdk-1.15.zip"
